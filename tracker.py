@@ -22,11 +22,13 @@ threading.Thread(target=run_server).start()
 
 # 🔐 Telegram config
 BOT_TOKEN = os.getenv("8791908596:AAF-uJ0gYGDqF4Mt6GgwYpOVC4ypXoABXxM")
-CHAT_ID = os.getenv("884402268")
+CHAT_ID = os.getenv("8791908596")
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept-Language": "en-US,en;q=0.9"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml",
+    "Connection": "keep-alive"
 }
 
 URLS = [
@@ -56,11 +58,22 @@ def send(msg):
     except Exception as e:
         print("❌ Telegram error:", e, flush=True)
 
+# 🔥 FIXED fetch (bypass 403)
 def fetch(url):
     try:
-        res = requests.get(url, headers=HEADERS, timeout=10)
+        session = requests.Session()
+        session.headers.update(HEADERS)
+
+        # Step 1: Visit homepage (get cookies)
+        session.get("https://www.flipkart.com")
+
+        # Step 2: Visit search page
+        res = session.get(url, timeout=10)
+
         print(f"🌐 Fetching: {url} | Status: {res.status_code}", flush=True)
+
         return res.text
+
     except Exception as e:
         print("❌ Fetch error:", e, flush=True)
         return None
@@ -89,7 +102,7 @@ def parse(html):
 
             discount = ((mrp - price) / mrp) * 100
 
-            if discount >= 10:  # 🔥 testing mode
+            if discount >= 10:  # 🔥 keep low for testing
                 full_link = "https://www.flipkart.com" + link
                 deals.append((name, price, mrp, discount, full_link))
 
@@ -126,7 +139,7 @@ def check():
 
             time.sleep(2)
 
-# 🔁 FINAL LOOP (your updated version)
+# 🔁 FINAL LOOP
 while True:
     try:
         print("🚀 Checking deals...", flush=True)
