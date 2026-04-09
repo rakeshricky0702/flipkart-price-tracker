@@ -6,7 +6,7 @@ import json
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# 🔥 Fake web server (needed for Render free)
+# 🔥 Fake web server (Render free)
 def run_server():
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -24,11 +24,12 @@ threading.Thread(target=run_server).start()
 BOT_TOKEN = os.getenv("8791908596:AAF-uJ0gYGDqF4Mt6GgwYpOVC4ypXoABXxM")
 CHAT_ID = os.getenv("884402268")
 
+# Better headers (avoid block)
 HEADERS = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0",
+    "Accept-Language": "en-US,en;q=0.9"
 }
 
-# 🔎 Categories
 URLS = [
     "https://www.flipkart.com/search?q=mobiles",
     "https://www.flipkart.com/search?q=laptops",
@@ -37,7 +38,6 @@ URLS = [
 
 SEEN_FILE = "seen.json"
 
-# Load seen products
 try:
     with open(SEEN_FILE, "r") as f:
         seen = set(json.load(f))
@@ -53,12 +53,15 @@ def send(msg):
     try:
         requests.get(url, params={"chat_id": CHAT_ID, "text": msg})
     except:
-        pass
+        print("Telegram send failed")
 
 def fetch(url):
     try:
-        return requests.get(url, headers=HEADERS, timeout=10).text
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        print(f"Fetching: {url} | Status: {res.status_code}")
+        return res.text
     except:
+        print("Fetch failed")
         return None
 
 def parse(html):
@@ -85,13 +88,14 @@ def parse(html):
 
             discount = ((mrp - price) / mrp) * 100
 
-            if discount >= 50:
+            if discount >= 10:  # 🔥 lowered for testing
                 full_link = "https://www.flipkart.com" + link
                 deals.append((name, price, mrp, discount, full_link))
 
         except:
             continue
 
+    print(f"Found {len(deals)} deals")
     return deals
 
 def check():
@@ -113,6 +117,7 @@ def check():
 💰 ₹{price} (MRP ₹{mrp})
 🔗 {link}
 """
+            print("Sending deal:", name)
             send(msg)
 
             seen.add(link)
@@ -121,5 +126,6 @@ def check():
             time.sleep(2)
 
 while True:
+    print("Checking deals...")
     check()
-    time.sleep(900)  # every 15 min
+    time.sleep(600)  # every 10 min
