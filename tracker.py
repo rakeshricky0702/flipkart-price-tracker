@@ -24,7 +24,6 @@ threading.Thread(target=run_server).start()
 BOT_TOKEN = os.getenv("8791908596:AAF-uJ0gYGDqF4Mt6GgwYpOVC4ypXoABXxM")
 CHAT_ID = os.getenv("884402268")
 
-# Better headers (avoid block)
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Accept-Language": "en-US,en;q=0.9"
@@ -38,6 +37,7 @@ URLS = [
 
 SEEN_FILE = "seen.json"
 
+# Load seen products
 try:
     with open(SEEN_FILE, "r") as f:
         seen = set(json.load(f))
@@ -52,16 +52,17 @@ def send(msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     try:
         requests.get(url, params={"chat_id": CHAT_ID, "text": msg})
-    except:
-        print("Telegram send failed")
+        print("✅ Sent to Telegram", flush=True)
+    except Exception as e:
+        print("❌ Telegram error:", e, flush=True)
 
 def fetch(url):
     try:
         res = requests.get(url, headers=HEADERS, timeout=10)
-        print(f"Fetching: {url} | Status: {res.status_code}")
+        print(f"🌐 Fetching: {url} | Status: {res.status_code}", flush=True)
         return res.text
-    except:
-        print("Fetch failed")
+    except Exception as e:
+        print("❌ Fetch error:", e, flush=True)
         return None
 
 def parse(html):
@@ -88,14 +89,14 @@ def parse(html):
 
             discount = ((mrp - price) / mrp) * 100
 
-            if discount >= 10:  # 🔥 lowered for testing
+            if discount >= 10:  # 🔥 testing mode
                 full_link = "https://www.flipkart.com" + link
                 deals.append((name, price, mrp, discount, full_link))
 
         except:
             continue
 
-    print(f"Found {len(deals)} deals")
+    print(f"📊 Found {len(deals)} deals", flush=True)
     return deals
 
 def check():
@@ -117,7 +118,7 @@ def check():
 💰 ₹{price} (MRP ₹{mrp})
 🔗 {link}
 """
-            print("Sending deal:", name)
+            print(f"📩 Sending: {name}", flush=True)
             send(msg)
 
             seen.add(link)
@@ -125,7 +126,13 @@ def check():
 
             time.sleep(2)
 
+# 🔁 FINAL LOOP (your updated version)
 while True:
-    print("Checking deals...")
-    check()
-    time.sleep(600)  # every 10 min
+    try:
+        print("🚀 Checking deals...", flush=True)
+        check()
+        print("⏳ Sleeping 10 min...", flush=True)
+        time.sleep(600)
+    except Exception as e:
+        print("❌ Error:", e, flush=True)
+        time.sleep(60)
