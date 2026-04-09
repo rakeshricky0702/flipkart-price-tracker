@@ -6,7 +6,7 @@ import json
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# 🔥 Fake web server (required for Render free)
+# 🔥 Fake web server (needed for Render free)
 def run_server():
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -122,36 +122,4 @@ def check():
 
 while True:
     check()
-    time.sleep(900)  # every 15 min            continue
-
-    return deals
-
-def check():
-    global seen
-
-    for url in URLS:
-        html = fetch(url)
-        if not html:
-            continue
-
-        deals = parse(html)
-
-        for name, price, mrp, discount, link in deals:
-            if link in seen:
-                continue
-
-            msg = f"""🔥 {discount:.0f}% OFF
-{name}
-💰 ₹{price} (MRP ₹{mrp})
-🔗 {link}
-"""
-            send(msg)
-
-            seen.add(link)
-            save_seen()
-
-            time.sleep(2)  # avoid spam
-
-while True:
-    check()
-    time.sleep(900)  # every 15 minutes
+    time.sleep(900)  # every 15 min
